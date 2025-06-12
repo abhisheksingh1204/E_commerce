@@ -2,7 +2,7 @@ const db = require("../db/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-const SECRET_KEY = "your_jwt_secret"; // use dotenv in real apps
+const SECRET_KEY = "your_jwt_secret"; 
 
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
