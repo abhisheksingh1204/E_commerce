@@ -9,6 +9,7 @@ const orderRoutes = require("./routes/orders");
 const orderItemRoutes = require("./routes/orderItems");
 const reviewRoutes = require("./routes/reviews");
 
+app.use("/uploads", express.static("uploads"));
 app.use("/reviews", reviewRoutes);
 app.use("/order-items", orderItemRoutes);
 app.use("/orders", orderRoutes);
