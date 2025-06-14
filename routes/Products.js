@@ -1,6 +1,18 @@
 const express = require("express");
 const router = express.Router();
 const knex = require("../db/db");
+const upload = require("../middleware/upload");
+
+router.post("/image", upload.single("image"), async (req, res) => {
+  const { name, price, stock_quantity } = req.body;
+  const image_url = req.file ? req.file.filename : null;
+
+  const [product] = await knex("products")
+    .insert({ name, price, stock_quantity, image_url })
+    .returning("*");
+
+  res.json(product);
+});
 
 router.post("/", async (req, res) => {
   try {

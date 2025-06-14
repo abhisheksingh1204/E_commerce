@@ -8,7 +8,9 @@ const authRoutes = require("./routes/auth");
 const orderRoutes = require("./routes/orders");
 const orderItemRoutes = require("./routes/orderItems");
 const reviewRoutes = require("./routes/reviews");
+const cartRoutes = require("./routes/Cart");
 
+app.use("/cart", cartRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/reviews", reviewRoutes);
 app.use("/order-items", orderItemRoutes);
