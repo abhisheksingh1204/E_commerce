@@ -3,7 +3,7 @@ const app = express();
 
 app.use(express.json());
 
-const productRoutes = require("./routes/Products");
+const productRoutes = require("./routes/products");
 const authRoutes = require("./routes/auth");
 const orderRoutes = require("./routes/orders");
 const orderItemRoutes = require("./routes/orderItems");
