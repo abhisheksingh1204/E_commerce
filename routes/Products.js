@@ -7,7 +7,7 @@ router.post("/image", upload.single("image"), async (req, res) => {
   const { name, price, stock_quantity } = req.body;
   const image_url = req.file ? req.file.filename : null;
 
-  const [product] = await knex("products")
+  const [product] = await knex("Products")
     .insert({ name, price, stock_quantity, image_url })
     .returning("*");
 
@@ -17,7 +17,7 @@ router.post("/image", upload.single("image"), async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const { name, price, stock_quantity, image_url } = req.body;
-    const newProduct = await knex("products")
+    const newProduct = await knex("Products")
       .insert({ name, price, stock_quantity, image_url })
       .returning("*");
     res.json(newProduct);
@@ -29,7 +29,7 @@ router.post("/", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const search = req.query.search || "";
-    const products = await knex("products").whereILike("name", `%${search}%`);
+    const products = await knex("Products").whereILike("name", `%${search}%`);
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -39,7 +39,7 @@ router.get("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const { name, price, stock_quantity, image_url } = req.body;
-    const updated = await knex("products")
+    const updated = await knex("Products")
       .where({ id: req.params.id })
       .update({
         name,
@@ -57,7 +57,7 @@ router.put("/:id", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   try {
-    await knex("products").where({ id: req.params.id }).del();
+    await knex("Products").where({ id: req.params.id }).del();
     res.sendStatus(204);
   } catch (err) {
     res.status(500).json({ error: err.message });
