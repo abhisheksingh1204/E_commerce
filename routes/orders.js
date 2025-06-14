@@ -2,12 +2,11 @@ const express = require("express");
 const router = express.Router();
 const knex = require("../db/db");
 
-// Create new order manually
 router.post("/", async (req, res) => {
   try {
-    const { Total_amount, quantity, payment_method } = req.body;
+    const { Total_amount, quantity, status, payment_method } = req.body;
     const newOrder = await knex("Orders")
-      .insert({ Total_amount, quantity, payment_method })
+      .insert({ Total_amount, quantity, status, payment_method })
       .returning("*");
     res.json(newOrder);
   } catch (err) {
@@ -15,7 +14,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Get all orders
 router.get("/", async (req, res) => {
   try {
     const orders = await knex("Orders").select("*");
@@ -25,7 +23,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get order by ID
 router.get("/:id", async (req, res) => {
   try {
     const order = await knex("Orders").where({ id: req.params.id }).first();
@@ -36,10 +33,9 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Update order by ID
 router.put("/:id", async (req, res) => {
   try {
-    const { Total_amount, quantity, payment_method } = req.body;
+    const { Total_amount, quantity, status, payment_method } = req.body;
     const updated = await knex("Orders")
       .where({ id: req.params.id })
       .update({
@@ -55,7 +51,6 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Delete order by ID
 router.delete("/:id", async (req, res) => {
   try {
     await knex("Orders").where({ id: req.params.id }).del();
@@ -65,12 +60,10 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// Place order from cart (example logic)
 router.post("/place", async (req, res) => {
   try {
     const { user_id, payment_method } = req.body;
 
-    // Fetch cart items
     const cartItems = await knex("Cart")
       .join("Products", "Cart.product_id", "Products.id")
       .select("Cart.*", "Products.price")
@@ -80,13 +73,11 @@ router.post("/place", async (req, res) => {
       return res.status(400).json({ error: "Cart is empty" });
     }
 
-    // Calculate total
     const totalAmount = cartItems.reduce(
       (sum, item) => sum + item.quantity * item.price,
       0
     );
 
-    // Create order
     const [order] = await knex("Orders")
       .insert({
         Total_amount: totalAmount,
@@ -95,7 +86,6 @@ router.post("/place", async (req, res) => {
       })
       .returning("*");
 
-    // Insert into OrderItems
     const orderItemsData = cartItems.map((item) => ({
       user_id,
       order_id: order.id,
@@ -105,7 +95,6 @@ router.post("/place", async (req, res) => {
 
     await knex("OrderItems").insert(orderItemsData);
 
-    // Clear cart
     await knex("Cart").where({ user_id }).del();
 
     res.json({ message: "Order placed successfully", order });
@@ -114,7 +103,6 @@ router.post("/place", async (req, res) => {
   }
 });
 
-// Get order history for user
 router.get("/history/:user_id", async (req, res) => {
   try {
     const { user_id } = req.params;
