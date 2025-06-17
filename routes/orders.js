@@ -4,9 +4,10 @@ const knex = require("../db/db");
 
 router.post("/", async (req, res) => {
   try {
-    const { Total_amount, quantity, status, payment_method } = req.body;
+    const { Total_amount, quantity, status, payment_method, user_id } =
+      req.body;
     const newOrder = await knex("Orders")
-      .insert({ Total_amount, quantity, status, payment_method })
+      .insert({ Total_amount, quantity, status, payment_method, user_id })
       .returning("*");
     res.json(newOrder);
   } catch (err) {
@@ -42,6 +43,7 @@ router.put("/:id", async (req, res) => {
         Total_amount,
         quantity,
         payment_method,
+        user_id,
         updated_at: knex.fn.now(),
       })
       .returning("*");

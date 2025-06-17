@@ -9,7 +9,9 @@ const orderRoutes = require("./routes/orders");
 const orderItemRoutes = require("./routes/orderItems");
 const reviewRoutes = require("./routes/reviews");
 const cartRoutes = require("./routes/Cart");
+const mailerRoutes = require("./routes/mailer");
 
+app.use("/mailer", mailerRoutes);
 app.use("/cart", cartRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/reviews", reviewRoutes);
