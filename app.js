@@ -13,7 +13,7 @@ const cartRoutes = require("./routes/Cart");
 app.use("/cart", cartRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/reviews", reviewRoutes);
-app.use("/order-items", orderItemRoutes);
+app.use("/orderItems", orderItemRoutes);
 app.use("/orders", orderRoutes);
 app.use("/Products", productRoutes);
 app.use("/api/auth", authRoutes);

@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const knex = require("../db/db");
 
-// 1️⃣ Add item to cart
 router.post("/", async (req, res) => {
   try {
     const { user_id, product_id, quantity } = req.body;
@@ -11,18 +10,15 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Check if item already exists
     const existing = await knex("Cart").where({ user_id, product_id }).first();
 
     if (existing) {
-      // Update quantity
       await knex("Cart")
         .where({ user_id, product_id })
         .update({
           quantity: existing.quantity + quantity,
         });
     } else {
-      // Insert new item
       await knex("Cart").insert({ user_id, product_id, quantity });
     }
 
@@ -32,18 +28,17 @@ router.post("/", async (req, res) => {
   }
 });
 
-// 2️⃣ View cart items for a user
 router.get("/:user_id", async (req, res) => {
   try {
     const { user_id } = req.params;
 
     const items = await knex("Cart")
-      .join("products", "Cart.product_id", "products.id")
+      .join("Products", "Cart.product_id", "Products.id")
       .select(
         "Cart.id",
         "Cart.product_id",
-        "products.name",
-        "products.image_url",
+        "Products.name",
+        "Products.image_url",
         "Cart.quantity"
       )
       .where("Cart.user_id", user_id);
@@ -54,7 +49,6 @@ router.get("/:user_id", async (req, res) => {
   }
 });
 
-// 3️⃣ Update quantity of a cart item
 router.put("/:user_id/:product_id", async (req, res) => {
   try {
     const { user_id, product_id } = req.params;
@@ -68,7 +62,6 @@ router.put("/:user_id/:product_id", async (req, res) => {
   }
 });
 
-// 4️⃣ Delete an item from cart
 router.delete("/:user_id/:product_id", async (req, res) => {
   try {
     const { user_id, product_id } = req.params;
@@ -81,7 +74,6 @@ router.delete("/:user_id/:product_id", async (req, res) => {
   }
 });
 
-// 5️⃣ Clear all items from a user's cart
 router.delete("/clear/:user_id", async (req, res) => {
   try {
     const { user_id } = req.params;
