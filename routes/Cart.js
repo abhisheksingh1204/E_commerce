@@ -2,6 +2,19 @@ const express = require("express");
 const router = express.Router();
 const knex = require("../db/db");
 
+/**
+ * @swagger
+ * /cart:
+ *   post:
+ *     summary: Add item to cart
+ *     responses:
+ *       200:
+ *         description: Item added to cart
+ *       400:
+ *         description: Missing required fields
+ *       500:
+ *         description: Server error
+ */
 router.post("/", async (req, res) => {
   try {
     const { user_id, product_id, quantity } = req.body;
@@ -28,6 +41,17 @@ router.post("/", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /cart/{user_id}:
+ *   get:
+ *     summary: Get all cart items for a user
+ *     responses:
+ *       200:
+ *         description: List of cart items
+ *       500:
+ *         description: Server error
+ */
 router.get("/:user_id", async (req, res) => {
   try {
     const { user_id } = req.params;
@@ -49,6 +73,17 @@ router.get("/:user_id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /cart/{user_id}/{product_id}:
+ *   put:
+ *     summary: Update quantity of a cart item
+ *     responses:
+ *       200:
+ *         description: Cart item updated
+ *       500:
+ *         description: Server error
+ */
 router.put("/:user_id/:product_id", async (req, res) => {
   try {
     const { user_id, product_id } = req.params;
@@ -62,6 +97,17 @@ router.put("/:user_id/:product_id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /cart/{user_id}/{product_id}:
+ *   delete:
+ *     summary: Remove item from cart
+ *     responses:
+ *       200:
+ *         description: Item removed from cart
+ *       500:
+ *         description: Server error
+ */
 router.delete("/:user_id/:product_id", async (req, res) => {
   try {
     const { user_id, product_id } = req.params;
@@ -74,6 +120,17 @@ router.delete("/:user_id/:product_id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /cart/clear/{user_id}:
+ *   delete:
+ *     summary: Clear all items from a user's cart
+ *     responses:
+ *       200:
+ *         description: Cart cleared
+ *       500:
+ *         description: Server error
+ */
 router.delete("/clear/:user_id", async (req, res) => {
   try {
     const { user_id } = req.params;

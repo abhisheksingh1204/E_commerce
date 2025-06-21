@@ -11,6 +11,17 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+/**
+ * @swagger
+ * /orders:
+ *   post:
+ *     summary: Place a new order with direct details
+ *     responses:
+ *       200:
+ *         description: Order placed and email sent
+ *       500:
+ *         description: Server error
+ */
 router.post("/", async (req, res) => {
   try {
     const { Total_amount, quantity, status, payment_method, user_id } =
@@ -48,6 +59,18 @@ router.post("/", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /orders:
+ *   get:
+ *     summary: Get all orders
+ *     tags: [Orders]
+ *     responses:
+ *       200:
+ *         description: List of all orders
+ *       500:
+ *         description: Server error
+ */
 router.get("/", async (req, res) => {
   try {
     const orders = await knex("Orders").select("*");
@@ -57,6 +80,19 @@ router.get("/", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /orders/{id}:
+ *   get:
+ *     summary: Get a single order by ID
+ *     responses:
+ *       200:
+ *         description: Order found
+ *       404:
+ *         description: Order not found
+ *       500:
+ *         description: Server error
+ */
 router.get("/:id", async (req, res) => {
   try {
     const order = await knex("Orders").where({ id: req.params.id }).first();
@@ -67,9 +103,21 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /orders/{id}:
+ *   put:
+ *     summary: Update an order
+ *     responses:
+ *       200:
+ *         description: Order updated
+ *       500:
+ *         description: Server error
+ */
 router.put("/:id", async (req, res) => {
   try {
-    const { Total_amount, quantity, status, payment_method } = req.body;
+    const { Total_amount, quantity, status, payment_method, user_id } =
+      req.body;
     const updated = await knex("Orders")
       .where({ id: req.params.id })
       .update({
@@ -86,6 +134,17 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /orders/{id}:
+ *   delete:
+ *     summary: Delete an order by ID
+ *     responses:
+ *       204:
+ *         description: Order deleted
+ *       500:
+ *         description: Server error
+ */
 router.delete("/:id", async (req, res) => {
   try {
     await knex("Orders").where({ id: req.params.id }).del();
@@ -95,11 +154,24 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /orders/place:
+ *   post:
+ *     summary: Place an order from the user's cart
+ *     responses:
+ *       200:
+ *         description: Order placed and cart cleared
+ *       400:
+ *         description: Cart is empty
+ *       500:
+ *         description: Order or email error
+ */
 router.post("/place", async (req, res) => {
   try {
     const { user_id, payment_method } = req.body;
 
-    // Step 1: Fetch cart items with product price
+    // Fetching cart items and product price
     const cartItems = await knex("Cart")
       .join("Products", "Cart.product_id", "Products.id")
       .select("Cart.*", "Products.price")
@@ -160,6 +232,17 @@ router.post("/place", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /orders/history/{user_id}:
+ *   get:
+ *     summary: Get order history for a specific user
+ *     responses:
+ *       200:
+ *         description: Order history fetched
+ *       500:
+ *         description: Server error
+ */
 router.get("/history/:user_id", async (req, res) => {
   try {
     const { user_id } = req.params;
