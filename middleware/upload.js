@@ -1,12 +1,18 @@
-const multer = require("multer");
-const path = require("path");
+import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+// ESM does not support __dirname directly, so recreate it
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
+  destination: (req, file, cb) => cb(null, `${__dirname}/uploads/`),
   filename: (req, file, cb) => {
     const uniqueName = Date.now() + path.extname(file.originalname);
     cb(null, uniqueName);
   },
 });
 
-module.exports = multer({ storage });
+export default multer({ storage });

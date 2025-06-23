@@ -1,32 +1,14 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const db = require("../db/db");
+import db from "../db/db.js";
 
-const { register, login } = require("../controllers/authController");
+import { register, login } from "../controllers/authController.js";
 
 /**
  * @swagger
  * /auth/register:
  *   post:
  *     summary: Register a new user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -42,21 +24,7 @@ router.post("/register", register);
  * /auth/login:
  *   post:
  *     summary: Login a user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
+ *     description: This api is used to login user
  *     responses:
  *       200:
  *         description: User logged in successfully
@@ -72,23 +40,9 @@ router.post("/login", login);
  * /auth:
  *   get:
  *     summary: Get list of all users
- *     tags: [Auth]
  *     responses:
  *       200:
  *         description: List of users
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   name:
- *                     type: string
- *                   email:
- *                     type: string
  *       500:
  *         description: Failed to fetch users
  */
@@ -102,4 +56,4 @@ router.get("/", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

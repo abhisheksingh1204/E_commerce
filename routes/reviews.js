@@ -1,6 +1,6 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const knex = require("../db/db");
+import knex from "../db/db.js";
 
 /**
  * @swagger
@@ -115,4 +115,4 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

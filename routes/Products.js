@@ -1,7 +1,7 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const knex = require("../db/db");
-const upload = require("../middleware/upload");
+import knex from "../db/db.js";
+import upload from "../middleware/upload.js";
 
 /**
  * @swagger
@@ -118,4 +118,4 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-module.exports = router;
+export default router;

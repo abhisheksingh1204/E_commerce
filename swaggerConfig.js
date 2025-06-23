@@ -1,5 +1,11 @@
-const swaggerJSDoc = require("swagger-jsdoc");
-const path = require("path");
+import swaggerJSDoc from "swagger-jsdoc";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+// 🔧 Re-create __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const options = {
   definition: {
@@ -15,8 +21,8 @@ const options = {
       },
     ],
   },
-  apis: [path.join(__dirname, "./routes/*.js")], // ✅ This must be relative to swaggerConfig.js
+  apis: [path.join(__dirname, "./routes/*.js")],
 };
 
 const swaggerSpec = swaggerJSDoc(options);
-module.exports = swaggerSpec;
+export default swaggerSpec;

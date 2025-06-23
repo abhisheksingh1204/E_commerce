@@ -1,9 +1,7 @@
-// Update with your config settings.
-
 /**
- * @type { Object.<string, import("knex").Knex.Config> }
+ * @type {import('knex').Knex.Config}
  */
-module.exports = {
+const config = {
   development: {
     client: "pg",
     connection: {
@@ -22,3 +20,5 @@ module.exports = {
     },
   },
 };
+
+export default config;

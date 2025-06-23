@@ -1,10 +1,10 @@
-const db = require("../db/db");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+import db from "../db/db.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const SECRET_KEY = "your_jwt_secret";
 
-exports.register = async (req, res) => {
+export const register = async (req, res) => {
   const { name, email, password } = req.body;
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -13,7 +13,7 @@ exports.register = async (req, res) => {
   res.status(201).json({ message: "User registered successfully" });
 };
 
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
   const { email, password } = req.body;
 
   const user = await db("users").where({ email }).first();

@@ -1,7 +1,7 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const knex = require("../db/db");
-const nodemailer = require("nodemailer");
+import knex from "../db/db.js";
+import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
   service: "Gmail",
@@ -258,4 +258,4 @@ router.get("/history/:user_id", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
