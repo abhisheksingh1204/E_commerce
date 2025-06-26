@@ -1,12 +1,36 @@
 import express from "express";
 const router = express.Router();
 import knex from "../db/db.js";
+import multer from "multer";
+const upload = multer();
 
 /**
- * @swagger
+ * @openapi
  * /cart:
  *   post:
  *     summary: Add item to cart
+ *     tags:
+ *       - Cart
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - user_id
+ *               - product_id
+ *               - quantity
+ *             properties:
+ *               user_id:
+ *                 type: integer
+ *                 description: Id of user
+ *               product_id:
+ *                 type: integer
+ *                 description: Id of product added
+ *               quantity:
+ *                 type: integer
+ *                 description: quantity of product added
  *     responses:
  *       200:
  *         description: Item added to cart
@@ -15,7 +39,7 @@ import knex from "../db/db.js";
  *       500:
  *         description: Server error
  */
-router.post("/", async (req, res) => {
+router.post("/", upload.none(), async (req, res) => {
   try {
     const { user_id, product_id, quantity } = req.body;
 
@@ -42,13 +66,39 @@ router.post("/", async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /cart/{user_id}:
  *   get:
  *     summary: Get all cart items for a user
+ *     tags:
+ *       - Cart
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the user whose cart items to retrieve
  *     responses:
  *       200:
  *         description: List of cart items
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   product_id:
+ *                     type: integer
+ *                   name:
+ *                     type: string
+ *                   image_url:
+ *                     type: string
+ *                   quantity:
+ *                     type: integer
  *       500:
  *         description: Server error
  */
@@ -74,13 +124,42 @@ router.get("/:user_id", async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /cart/{user_id}/{product_id}:
  *   put:
  *     summary: Update quantity of a cart item
+ *     tags:
+ *       - Cart
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the user
+ *       - in: path
+ *         name: product_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the product in cart
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - quantity
+ *             properties:
+ *               quantity:
+ *                 type: integer
+ *                 description: Updated quantity
  *     responses:
  *       200:
  *         description: Cart item updated
+ *       400:
+ *         description: Missing quantity value
  *       500:
  *         description: Server error
  */
@@ -98,10 +177,25 @@ router.put("/:user_id/:product_id", async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /cart/{user_id}/{product_id}:
  *   delete:
  *     summary: Remove item from cart
+ *     tags:
+ *       - Cart
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the user
+ *       - in: path
+ *         name: product_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the product to remove from cart
  *     responses:
  *       200:
  *         description: Item removed from cart
@@ -121,10 +215,19 @@ router.delete("/:user_id/:product_id", async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /cart/clear/{user_id}:
  *   delete:
  *     summary: Clear all items from a user's cart
+ *     tags:
+ *       - Cart
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the user whose cart is to be cleared
  *     responses:
  *       200:
  *         description: Cart cleared

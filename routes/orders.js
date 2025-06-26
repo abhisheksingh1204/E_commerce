@@ -2,6 +2,8 @@ import express from "express";
 const router = express.Router();
 import knex from "../db/db.js";
 import nodemailer from "nodemailer";
+import multer from "multer";
+const upload = multer();
 
 const transporter = nodemailer.createTransport({
   service: "Gmail",
@@ -12,17 +14,42 @@ const transporter = nodemailer.createTransport({
 });
 
 /**
- * @swagger
- * /orders:
+ *  @openapi
+ *  /orders:
  *   post:
  *     summary: Place a new order with direct details
+ *     tags:
+ *       - Orders
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - Total_amount
+ *               - quantity
+ *               - status
+ *               - payment_method
+ *               - user_id
+ *             properties:
+ *               Total_amount:
+ *                 type: number
+ *               quantity:
+ *                 type: integer
+ *               status:
+ *                 type: string
+ *               payment_method:
+ *                 type: string
+ *               user_id:
+ *                 type: integer
  *     responses:
  *       200:
  *         description: Order placed and email sent
  *       500:
  *         description: Server error
  */
-router.post("/", async (req, res) => {
+router.post("/", upload.none(), async (req, res) => {
   try {
     const { Total_amount, quantity, status, payment_method, user_id } =
       req.body;
@@ -81,15 +108,37 @@ router.get("/", async (req, res) => {
 });
 
 /**
- * @swagger
- * /orders/{id}:
+ * @openapi
+ * /orders:
  *   get:
- *     summary: Get a single order by ID
+ *     summary: Get all orders
+ *     tags:
+ *       - Orders
  *     responses:
  *       200:
- *         description: Order found
- *       404:
- *         description: Order not found
+ *         description: List of all orders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   Total_amount:
+ *                     type: number
+ *                   quantity:
+ *                     type: integer
+ *                   status:
+ *                     type: string
+ *                   payment_method:
+ *                     type: string
+ *                   user_id:
+ *                     type: integer
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
  *       500:
  *         description: Server error
  */
@@ -104,17 +153,68 @@ router.get("/:id", async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /orders/{id}:
  *   put:
  *     summary: Update an order
+ *     tags:
+ *       - Orders
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the order to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - Total_amount
+ *               - quantity
+ *               - payment_method
+ *               - user_id
+ *             properties:
+ *               Total_amount:
+ *                 type: number
+ *               quantity:
+ *                 type: integer
+ *               status:
+ *                 type: string
+ *               payment_method:
+ *                 type: string
+ *               user_id:
+ *                 type: integer
  *     responses:
  *       200:
  *         description: Order updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 Total_amount:
+ *                   type: number
+ *                 quantity:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *                 payment_method:
+ *                   type: string
+ *                 user_id:
+ *                   type: integer
+ *                 updated_at:
+ *                   type: string
+ *                   format: date-time
  *       500:
  *         description: Server error
  */
-router.put("/:id", async (req, res) => {
+router.put("/:id", upload.none(), async (req, res) => {
   try {
     const { Total_amount, quantity, status, payment_method, user_id } =
       req.body;
@@ -123,6 +223,7 @@ router.put("/:id", async (req, res) => {
       .update({
         Total_amount,
         quantity,
+        status,
         payment_method,
         user_id,
         updated_at: knex.fn.now(),
@@ -135,43 +236,96 @@ router.put("/:id", async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /orders/{id}:
  *   delete:
  *     summary: Delete an order by ID
+ *     tags:
+ *       - Orders
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the order to delete
  *     responses:
  *       204:
- *         description: Order deleted
+ *         description: Order deleted successfully (No Content)
  *       500:
  *         description: Server error
  */
 router.delete("/:id", async (req, res) => {
   try {
     await knex("Orders").where({ id: req.params.id }).del();
-    res.sendStatus(204);
+    res.sendStatus(204); // No Content
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 /**
- * @swagger
+ * @openapi
  * /orders/place:
  *   post:
  *     summary: Place an order from the user's cart
+ *     tags:
+ *       - Orders
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - user_id
+ *               - payment_method
+ *             properties:
+ *               user_id:
+ *                 type: integer
+ *                 description: ID of the user placing the order
+ *               payment_method:
+ *                 type: string
+ *                 description: Method of payment (e.g., "card", "cod", etc.)
  *     responses:
  *       200:
- *         description: Order placed and cart cleared
+ *         description: Order placed and cart cleared successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 order:
+ *                   type: object
+ *                 emailId:
+ *                   type: string
  *       400:
  *         description: Cart is empty
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Order or email error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
-router.post("/place", async (req, res) => {
+router.post("/place", upload.none(), async (req, res) => {
   try {
     const { user_id, payment_method } = req.body;
 
-    // Fetching cart items and product price
     const cartItems = await knex("Cart")
       .join("Products", "Cart.product_id", "Products.id")
       .select("Cart.*", "Products.price")
@@ -181,7 +335,6 @@ router.post("/place", async (req, res) => {
       return res.status(400).json({ error: "Cart is empty" });
     }
 
-    // Step 2: Calculate total amount
     const totalAmount = cartItems.reduce(
       (sum, item) => sum + item.quantity * item.price,
       0
@@ -192,18 +345,18 @@ router.post("/place", async (req, res) => {
       0
     );
 
-    // Step 3: Insert order into Orders table
     const [order] = await knex("Orders")
       .insert({
         Total_amount: totalAmount,
         quantity: totalQuantity,
-        status: "pending", // default status
+        status: "pending",
         payment_method,
         user_id,
       })
       .returning("*");
 
     await knex("Cart").where({ user_id }).del();
+
     const user = await knex("users").where({ id: user_id }).first();
 
     if (!user || !user.email) {
@@ -233,15 +386,53 @@ router.post("/place", async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /orders/history/{user_id}:
  *   get:
  *     summary: Get order history for a specific user
+ *     tags:
+ *       - Orders
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the user to fetch order history for
  *     responses:
  *       200:
  *         description: Order history fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   Total_amount:
+ *                     type: number
+ *                   quantity:
+ *                     type: integer
+ *                   status:
+ *                     type: string
+ *                   payment_method:
+ *                     type: string
+ *                   user_id:
+ *                     type: integer
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.get("/history/:user_id", async (req, res) => {
   try {

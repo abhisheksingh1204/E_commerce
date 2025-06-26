@@ -11,6 +11,7 @@ import cartRoutes from "./routes/Cart.js";
 const app = express();
 app.use(express.json());
 
+app.use(express.urlencoded({ extended: true }));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/cart", cartRoutes);

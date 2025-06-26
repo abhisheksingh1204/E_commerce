@@ -5,7 +5,13 @@ import jwt from "jsonwebtoken";
 const SECRET_KEY = "your_jwt_secret";
 
 export const register = async (req, res) => {
+  console.log("incoming req", req.body);
+
   const { name, email, password } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
 
   const hashedPassword = await bcrypt.hash(password, 10);
   await db("users").insert({ name, email, password: hashedPassword });

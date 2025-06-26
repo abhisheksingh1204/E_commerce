@@ -1,19 +1,53 @@
 import express from "express";
 const router = express.Router();
 import knex from "../db/db.js";
+import multer from "multer";
+const upload = multer();
 
 /**
- * @swagger
+ * @openapi
  * /reviews:
  *   post:
  *     summary: Add a new review
+ *     tags:
+ *       - Reviews
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - rating
+ *               - comment
+ *             properties:
+ *               rating:
+ *                 type: integer
+ *                 description: Rating given by the user (1-5)
+ *               comment:
+ *                 type: string
+ *                 description: Review comment
  *     responses:
  *       200:
  *         description: Review added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 rating:
+ *                   type: integer
+ *                 comment:
+ *                   type: string
+ *                 created_at:
+ *                   type: string
+ *                   format: date-time
  *       500:
  *         description: Server error
  */
-router.post("/", async (req, res) => {
+router.post("/", upload.none(), async (req, res) => {
   try {
     const { rating, comment } = req.body;
     const newReview = await knex("Review")
@@ -46,15 +80,32 @@ router.get("/", async (req, res) => {
 });
 
 /**
- * @swagger
- * /reviews/{id}:
+ * @openapi
+ * /reviews:
  *   get:
- *     summary: Get a single review by ID
+ *     summary: Get all reviews
+ *     tags:
+ *       - Reviews
  *     responses:
  *       200:
- *         description: Review found
- *       404:
- *         description: Review not found
+ *         description: List of all reviews
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   rating:
+ *                     type: integer
+ *                     description: Rating given (1-5)
+ *                   comment:
+ *                     type: string
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
  *       500:
  *         description: Server error
  */
@@ -70,17 +121,56 @@ router.get("/:id", async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /reviews/{id}:
  *   put:
  *     summary: Update a review by ID
+ *     tags:
+ *       - Reviews
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the review to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - rating
+ *               - comment
+ *             properties:
+ *               rating:
+ *                 type: integer
+ *                 description: Updated rating (1-5)
+ *               comment:
+ *                 type: string
+ *                 description: Updated comment
  *     responses:
  *       200:
  *         description: Review updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 rating:
+ *                   type: integer
+ *                 comment:
+ *                   type: string
+ *                 updated_at:
+ *                   type: string
+ *                   format: date-time
  *       500:
  *         description: Server error
  */
-router.put("/:id", async (req, res) => {
+router.put("/:id", upload.none(), async (req, res) => {
   try {
     const { rating, comment } = req.body;
 
@@ -96,13 +186,24 @@ router.put("/:id", async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /reviews/{id}:
  *   delete:
  *     summary: Delete a review by ID
+ *     tags:
+ *       - Reviews
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the review to delete
+ *         schema:
+ *           type: integer
  *     responses:
  *       204:
- *         description: Review deleted
+ *         description: Review deleted successfully (No Content)
+ *       404:
+ *         description: Review not found
  *       500:
  *         description: Server error
  */
