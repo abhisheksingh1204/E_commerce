@@ -3,7 +3,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
-// ESM does not support __dirname directly, so recreate it
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 

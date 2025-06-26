@@ -1,5 +1,5 @@
 import knex from "knex";
-import knexConfig from "../knex/knexfile.js"; // ✅ add `.js` extension
+import knexConfig from "../knex/knexfile.js";
 
 const db = knex(knexConfig.development);
 
