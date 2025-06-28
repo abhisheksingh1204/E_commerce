@@ -158,10 +158,31 @@ router.get("/:user_id", async (req, res) => {
  *     responses:
  *       200:
  *         description: Cart item updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       400:
  *         description: Missing quantity value
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.put("/:user_id/:product_id", async (req, res) => {
   try {
@@ -199,8 +220,22 @@ router.put("/:user_id/:product_id", async (req, res) => {
  *     responses:
  *       200:
  *         description: Item removed from cart
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.delete("/:user_id/:product_id", async (req, res) => {
   try {
@@ -231,8 +266,22 @@ router.delete("/:user_id/:product_id", async (req, res) => {
  *     responses:
  *       200:
  *         description: Cart cleared
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.delete("/clear/:user_id", async (req, res) => {
   try {

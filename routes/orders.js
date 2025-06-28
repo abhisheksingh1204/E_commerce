@@ -46,8 +46,22 @@ const transporter = nodemailer.createTransport({
  *     responses:
  *       200:
  *         description: Order placed and email sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.post("/", upload.none(), async (req, res) => {
   try {
@@ -87,16 +101,49 @@ router.post("/", upload.none(), async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /orders:
  *   get:
  *     summary: Get all orders
- *     tags: [Orders]
+ *     tags:
+ *      - Orders
  *     responses:
  *       200:
  *         description: List of all orders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   total_amount:
+ *                     type: number
+ *                   quantity:
+ *                     type: integer
+ *                   status:
+ *                     type: string
+ *                   payment_method:
+ *                     type: string
+ *                   user_id:
+ *                     type: integer
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
+ *                   updated_at:
+ *                     type: string
+ *                     format: date-time
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.get("/", async (req, res) => {
   try {
@@ -141,6 +188,13 @@ router.get("/", async (req, res) => {
  *                     format: date-time
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.get("/:id", async (req, res) => {
   try {
@@ -213,6 +267,13 @@ router.get("/:id", async (req, res) => {
  *                   format: date-time
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.put("/:id", upload.none(), async (req, res) => {
   try {
@@ -252,8 +313,22 @@ router.put("/:id", upload.none(), async (req, res) => {
  *     responses:
  *       204:
  *         description: Order deleted successfully (No Content)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.delete("/:id", async (req, res) => {
   try {

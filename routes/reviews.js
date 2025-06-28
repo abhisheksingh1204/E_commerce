@@ -202,6 +202,13 @@ router.put("/:id", upload.none(), async (req, res) => {
  *     responses:
  *       204:
  *         description: Review deleted successfully (No Content)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       404:
  *         description: Review not found
  *       500:

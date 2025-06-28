@@ -13,7 +13,8 @@ const options = {
     info: {
       title: "Ecommerce app",
       version: "1.0.0",
-      description: "API documentation of Ecommerce app",
+      description:
+        "This is API documentation of my Ecommerce app, all the APIs used in my Project has documented here, you can see my project on 'https://github.com/abhisheksingh1204/E_commerce' ",
     },
     servers: [
       {

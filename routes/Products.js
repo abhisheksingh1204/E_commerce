@@ -131,7 +131,7 @@ router.post("/", async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /products:
  *   get:
  *     summary: Get all products (with optional search)
@@ -178,10 +178,34 @@ router.get("/", async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /products/{id}:
  *   put:
  *     summary: Update a product by ID
+ *     tags:
+ *       - Products
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the product to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               stock_quantity:
+ *                 type: integer
+ *               image_url:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Product updated
