@@ -184,7 +184,7 @@ router.get("/:user_id", async (req, res) => {
  *                 error:
  *                   type: string
  */
-router.put("/:user_id/:product_id", async (req, res) => {
+router.put("/:user_id/:product_id", upload.none(), async (req, res) => {
   try {
     const { user_id, product_id } = req.params;
     const { quantity } = req.body;
@@ -192,6 +192,52 @@ router.put("/:user_id/:product_id", async (req, res) => {
     await knex("Cart").where({ user_id, product_id }).update({ quantity });
 
     res.json({ message: "Cart item updated" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * @openapi
+ * /cart/clear/{user_id}:
+ *   delete:
+ *     summary: Clear all items from a user's cart
+ *     tags:
+ *       - Cart
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the user whose cart is to be cleared
+ *     responses:
+ *       200:
+ *         description: Cart cleared
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
+router.delete("/clear/:user_id", async (req, res) => {
+  try {
+    const { user_id } = req.params;
+
+    await knex("Cart").where({ user_id }).del();
+
+    res.json({ message: "Cart cleared" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -244,52 +290,6 @@ router.delete("/:user_id/:product_id", async (req, res) => {
     await knex("Cart").where({ user_id, product_id }).del();
 
     res.json({ message: "Item removed from cart" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-/**
- * @openapi
- * /cart/clear/{user_id}:
- *   delete:
- *     summary: Clear all items from a user's cart
- *     tags:
- *       - Cart
- *     parameters:
- *       - in: path
- *         name: user_id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID of the user whose cart is to be cleared
- *     responses:
- *       200:
- *         description: Cart cleared
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- */
-router.delete("/clear/:user_id", async (req, res) => {
-  try {
-    const { user_id } = req.params;
-
-    await knex("Cart").where({ user_id }).del();
-
-    res.json({ message: "Cart cleared" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

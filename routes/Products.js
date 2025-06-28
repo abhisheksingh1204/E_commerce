@@ -67,74 +67,74 @@ router.post("/image", upload.single("image"), async (req, res) => {
   res.status(201).json(product);
 });
 
-/**
- * @openapi
- * /products:
- *   post:
- *     summary: Add a new product (without image upload)
- *     tags:
- *       - Products
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - price
- *               - stock_quantity
- *             properties:
- *               name:
- *                 type: string
- *                 description: Name of the product
- *               price:
- *                 type: number
- *                 description: Price of the product
- *               stock_quantity:
- *                 type: integer
- *                 description: Quantity available in stock
- *               image_url:
- *                 type: string
- *                 description: Optional image URL or file name
- *     responses:
- *       200:
- *         description: Product added
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                 name:
- *                   type: string
- *                 price:
- *                   type: number
- *                 stock_quantity:
- *                   type: integer
- *                 image_url:
- *                   type: string
- *       500:
- *         description: Server error
- */
-router.post("/", async (req, res) => {
-  try {
-    const { name, price, stock_quantity, image_url } = req.body;
-    const newProduct = await knex("Products")
-      .insert({ name, price, stock_quantity, image_url })
-      .returning("*");
-    res.json(newProduct);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// /**
+//  * @openapi
+//  * /products:
+//  *   post:
+//  *     summary: Add a new product (without image upload)
+//  *     tags:
+//  *       - Products
+//  *     requestBody:
+//  *       required: true
+//  *       content:
+//  *         multipart/form-data:
+//  *           schema:
+//  *             type: object
+//  *             required:
+//  *               - name
+//  *               - price
+//  *               - stock_quantity
+//  *             properties:
+//  *               name:
+//  *                 type: string
+//  *                 description: Name of the product
+//  *               price:
+//  *                 type: number
+//  *                 description: Price of the product
+//  *               stock_quantity:
+//  *                 type: integer
+//  *                 description: Quantity available in stock
+//  *               image_url:
+//  *                 type: string
+//  *                 description: Optional image URL or file name
+//  *     responses:
+//  *       200:
+//  *         description: Product added
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 id:
+//  *                   type: integer
+//  *                 name:
+//  *                   type: string
+//  *                 price:
+//  *                   type: number
+//  *                 stock_quantity:
+//  *                   type: integer
+//  *                 image_url:
+//  *                   type: string
+//  *       500:
+//  *         description: Server error
+//  */
+// router.post("/", async (req, res) => {
+//   try {
+//     const { name, price, stock_quantity, image_url } = req.body;
+//     const newProduct = await knex("Products")
+//       .insert({ name, price, stock_quantity, image_url })
+//       .returning("*");
+//     res.json(newProduct);
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
 
 /**
  * @openapi
  * /products:
  *   get:
- *     summary: Get all products (with optional search)
+ *     summary: Get all products
  *     tags:
  *       - Products
  *     parameters:
@@ -194,7 +194,7 @@ router.get("/", async (req, res) => {
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -212,7 +212,7 @@ router.get("/", async (req, res) => {
  *       500:
  *         description: Server error
  */
-router.put("/:id", async (req, res) => {
+router.put("/:id", upload.none(), async (req, res) => {
   try {
     const { name, price, stock_quantity, image_url } = req.body;
     const updated = await knex("Products")
@@ -234,8 +234,8 @@ router.put("/:id", async (req, res) => {
 /**
  * @openapi
  * /products/{id}:
- *   put:
- *     summary: Update a product by ID
+ *   delete:
+ *     summary: Delete a product by ID
  *     tags:
  *       - Products
  *     parameters:
@@ -244,64 +244,30 @@ router.put("/:id", async (req, res) => {
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID of the product to update
+ *         description: ID of the product to delete
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
- *             required:
- *               - name
- *               - price
- *               - stock_quantity
- *             properties:
- *               name:
- *                 type: string
- *               price:
- *                 type: number
- *               stock_quantity:
- *                 type: integer
- *               image_url:
- *                 type: string
  *     responses:
  *       200:
- *         description: Product updated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                 name:
- *                   type: string
- *                 price:
- *                   type: number
- *                 stock_quantity:
- *                   type: integer
- *                 image_url:
- *                   type: string
- *                 updated_at:
- *                   type: string
- *                   format: date-time
+ *         description: Product deleted
  *       500:
  *         description: Server error
  */
-router.put("/:id", async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
-    const { name, price, stock_quantity, image_url } = req.body;
-    const updated = await knex("Products")
+    const deleted = await knex("Products")
       .where({ id: req.params.id })
-      .update({
-        name,
-        price,
-        stock_quantity,
-        image_url,
-        updated_at: knex.fn.now(),
-      })
-      .returning("*");
-    res.json(updated);
+      .where({ id: req.params.id })
+      .del();
+    if (deleted) {
+      res.status(200).json({ message: "Product deleted successfully" });
+    } else {
+      res.status(404).json({ message: "Product not found" });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
