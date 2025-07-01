@@ -6,7 +6,7 @@ const upload = multer();
 
 /**
  * @openapi
- * /cart:
+ * /cart/Add to cart:
  *   post:
  *     summary: Add item to cart
  *     tags:
@@ -24,42 +24,75 @@ const upload = multer();
  *             properties:
  *               user_id:
  *                 type: integer
- *                 description: Id of user
+ *                 description: ID of the user
  *               product_id:
  *                 type: integer
- *                 description: Id of product added
+ *                 description: ID of the product to add
  *               quantity:
  *                 type: integer
- *                 description: quantity of product added
+ *                 description: Quantity of the product
  *     responses:
  *       200:
- *         description: Item added to cart
+ *         description: Item added to cart and stock updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Item added and stock updated
  *       400:
- *         description: Missing required fields
+ *         description: Missing required fields or insufficient stock
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
-router.post("/", upload.none(), async (req, res) => {
+router.post("/Add to cart", upload.none(), async (req, res) => {
   try {
     const { user_id, product_id, quantity } = req.body;
+    const qty = Number(quantity);
 
-    if (!user_id || !product_id || !quantity) {
+    if (!user_id || !product_id || !qty)
       return res.status(400).json({ error: "Missing required fields" });
-    }
+
+    const product = await knex("Products").where({ id: product_id }).first();
+    if (!product) return res.status(404).json({ error: "Product not found" });
+    if (product.stock_quantity < qty)
+      return res.status(400).json({ error: "Not enough stock" });
 
     const existing = await knex("Cart").where({ user_id, product_id }).first();
 
     if (existing) {
+      const updatedQty = existing.quantity + qty;
+      if (product.stock_quantity < updatedQty - existing.quantity)
+        return res.status(400).json({ error: "Not enough stock" });
+
       await knex("Cart")
         .where({ user_id, product_id })
-        .update({
-          quantity: existing.quantity + quantity,
-        });
+        .update({ quantity: updatedQty });
     } else {
-      await knex("Cart").insert({ user_id, product_id, quantity });
+      await knex("Cart").insert({ user_id, product_id, quantity: qty });
     }
 
-    res.json({ message: "Item added to cart" });
+    await knex("Products")
+      .where({ id: product_id })
+      .decrement("stock_quantity", qty);
+
+    res.json({ message: "Item added and stock updated" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

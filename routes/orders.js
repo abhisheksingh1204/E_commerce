@@ -13,92 +13,92 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-/**
- *  @openapi
- *  /orders:
- *   post:
- *     summary: Place a new order with direct details
- *     tags:
- *       - Orders
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required:
- *               - Total_amount
- *               - quantity
- *               - status
- *               - payment_method
- *               - user_id
- *             properties:
- *               Total_amount:
- *                 type: number
- *               quantity:
- *                 type: integer
- *               status:
- *                 type: string
- *               payment_method:
- *                 type: string
- *               user_id:
- *                 type: integer
- *     responses:
- *       200:
- *         description: Order placed and email sent
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- */
-router.post("/", upload.none(), async (req, res) => {
-  try {
-    const { Total_amount, quantity, status, payment_method, user_id } =
-      req.body;
+// /**
+//  *  @openapi
+//  *  /orders:
+//  *   post:
+//  *     summary: Place a new order with direct details
+//  *     tags:
+//  *       - Orders
+//  *     requestBody:
+//  *       required: true
+//  *       content:
+//  *         multipart/form-data:
+//  *           schema:
+//  *             type: object
+//  *             required:
+//  *               - Total_amount
+//  *               - quantity
+//  *               - status
+//  *               - payment_method
+//  *               - user_id
+//  *             properties:
+//  *               Total_amount:
+//  *                 type: number
+//  *               quantity:
+//  *                 type: integer
+//  *               status:
+//  *                 type: string
+//  *               payment_method:
+//  *                 type: string
+//  *               user_id:
+//  *                 type: integer
+//  *     responses:
+//  *       200:
+//  *         description: Order placed and email sent
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 error:
+//  *                   type: string
+//  *       500:
+//  *         description: Server error
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 error:
+//  *                   type: string
+//  */
+// router.post("/", upload.none(), async (req, res) => {
+//   try {
+//     const { Total_amount, quantity, status, payment_method, user_id } =
+//       req.body;
 
-    const [newOrder] = await knex("Orders")
-      .insert({ Total_amount, quantity, status, payment_method, user_id })
-      .returning("*");
+//     const [newOrder] = await knex("Orders")
+//       .insert({ Total_amount, quantity, status, payment_method, user_id })
+//       .returning("*");
 
-    const user = await knex("users").where({ id: user_id }).first();
+//     const user = await knex("users").where({ id: user_id }).first();
 
-    if (!user || !user.email) {
-      return res.status(404).json({ error: "User not found ya email missing" });
-    }
+//     if (!user || !user.email) {
+//       return res.status(404).json({ error: "User not found ya email missing" });
+//     }
 
-    const info = await transporter.sendMail({
-      from: '"My Shop" <shoppinginfo2345@gmail.com>',
-      to: user.email,
-      subject: "Order Confirmation",
-      text: `Thank you for your order of ₹${Total_amount}!`,
-      html: `<b>We received your order of ₹${Total_amount} successfully.</b>`,
-    });
+//     const info = await transporter.sendMail({
+//       from: '"My Shop" <shoppinginfo2345@gmail.com>',
+//       to: user.email,
+//       subject: "Order Confirmation",
+//       text: `Thank you for your order of ₹${Total_amount}!`,
+//       html: `<b>We received your order of ₹${Total_amount} successfully.</b>`,
+//     });
 
-    console.log("Message sent:", info.messageId);
+//     console.log("Message sent:", info.messageId);
 
-    res.json({
-      success: true,
-      message: "Order placed and email sent",
-      order: newOrder,
-      emailId: info.messageId,
-    });
-  } catch (err) {
-    console.error("Order or Email Error:", err.message);
-    res.status(500).json({ error: "Order placement ya email bhejne me error" });
-  }
-});
+//     res.json({
+//       success: true,
+//       message: "Order placed and email sent",
+//       order: newOrder,
+//       emailId: info.messageId,
+//     });
+//   } catch (err) {
+//     console.error("Order or Email Error:", err.message);
+//     res.status(500).json({ error: "Order placement ya email bhejne me error" });
+//   }
+// });
 
 /**
  * @openapi
@@ -145,9 +145,10 @@ router.post("/", upload.none(), async (req, res) => {
  *                 error:
  *                   type: string
  */
-router.get("/", async (req, res) => {
+router.get("/:user_id", async (req, res) => {
   try {
-    const orders = await knex("Orders").select("*");
+    const { user_id } = req.params;
+    const orders = await knex("Orders").select("*").where({ user_id });
     res.json(orders);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -242,6 +243,8 @@ router.get("/:id", async (req, res) => {
  *                 type: string
  *               user_id:
  *                 type: integer
+ *               cart_id:
+ *                 type: integer
  *     responses:
  *       200:
  *         description: Order updated
@@ -262,6 +265,8 @@ router.get("/:id", async (req, res) => {
  *                   type: string
  *                 user_id:
  *                   type: integer
+ *                 cart_id:
+ *                   type: integer
  *                 updated_at:
  *                   type: string
  *                   format: date-time
@@ -277,7 +282,7 @@ router.get("/:id", async (req, res) => {
  */
 router.put("/:id", upload.none(), async (req, res) => {
   try {
-    const { Total_amount, quantity, status, payment_method, user_id } =
+    const { Total_amount, quantity, status, payment_method, user_id, cart_id } =
       req.body;
     const updated = await knex("Orders")
       .where({ id: req.params.id })
@@ -287,6 +292,7 @@ router.put("/:id", upload.none(), async (req, res) => {
         status,
         payment_method,
         user_id,
+        cart_id,
         updated_at: knex.fn.now(),
       })
       .returning("*");
@@ -333,7 +339,7 @@ router.put("/:id", upload.none(), async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     await knex("Orders").where({ id: req.params.id }).del();
-    res.sendStatus(204); // No Content
+    res.sendStatus(204); // No
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -399,38 +405,32 @@ router.delete("/:id", async (req, res) => {
  */
 router.post("/place", upload.none(), async (req, res) => {
   try {
-    const { user_id, payment_method } = req.body;
-
-    const cartItems = await knex("Cart")
-      .join("Products", "Cart.product_id", "Products.id")
-      .select("Cart.*", "Products.price")
-      .where("Cart.user_id", user_id);
-
-    if (cartItems.length === 0) {
-      return res.status(400).json({ error: "Cart is empty" });
-    }
-
-    const totalAmount = cartItems.reduce(
-      (sum, item) => sum + item.quantity * item.price,
-      0
-    );
-
-    const totalQuantity = cartItems.reduce(
-      (sum, item) => sum + item.quantity,
-      0
-    );
+    const { user_id, cart_id, Total_amount, payment_method, quantity, status } =
+      req.body;
 
     const [order] = await knex("Orders")
       .insert({
-        Total_amount: totalAmount,
-        quantity: totalQuantity,
-        status: "pending",
+        Total_amount,
+        quantity,
+        status: status || "pending",
         payment_method,
         user_id,
+        cart_id,
       })
       .returning("*");
 
-    await knex("Cart").where({ user_id }).del();
+    const items = await knex("Orders")
+      .join("Cart", "Orders.cart_id", "Cart.id")
+      .select(
+        "Orders.id",
+        "Orders.cart_id",
+        "Orders.payment_method",
+        "Orders.Total_amount",
+        "Cart.quantity"
+      )
+      .where("Orders.cart_id", cart_id);
+
+    await knex("Cart").where("id", cart_id).del();
 
     const user = await knex("users").where({ id: user_id }).first();
 
@@ -442,8 +442,8 @@ router.post("/place", upload.none(), async (req, res) => {
       from: '"My Shop" <shoppinginfo2345@gmail.com>',
       to: user.email,
       subject: "Order Confirmation",
-      text: `Thank you for your order of ₹${totalAmount}!`,
-      html: `<b>We received your order of ₹${totalAmount} successfully.</b>`,
+      text: `Thank you for your order of ₹${Total_amount}!`,
+      html: `<b>We received your order of ₹${Total_amount} successfully.</b>`,
     });
 
     console.log("Message sent:", info.messageId);
@@ -453,6 +453,7 @@ router.post("/place", upload.none(), async (req, res) => {
       message: "Order placed and email sent",
       order,
       emailId: info.messageId,
+      items,
     });
   } catch (err) {
     console.error("Order or Email Error:", err.message);

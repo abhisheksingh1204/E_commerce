@@ -20,6 +20,7 @@ const upload = multer();
  *             required:
  *               - rating
  *               - comment
+ *               - ProductId
  *             properties:
  *               rating:
  *                 type: integer
@@ -27,6 +28,9 @@ const upload = multer();
  *               comment:
  *                 type: string
  *                 description: Review comment
+ *               ProductId:
+ *                 type: integer
+ *                 description: Id of product you want to write review of
  *     responses:
  *       200:
  *         description: Review added successfully
@@ -49,9 +53,9 @@ const upload = multer();
  */
 router.post("/", upload.none(), async (req, res) => {
   try {
-    const { rating, comment } = req.body;
+    const { rating, comment, ProductId } = req.body;
     const newReview = await knex("Review")
-      .insert({ rating, comment })
+      .insert({ rating, comment, ProductId })
       .returning("*");
     res.json(newReview);
   } catch (err) {
@@ -61,34 +65,21 @@ router.post("/", upload.none(), async (req, res) => {
 
 /**
  * @swagger
- * /reviews:
+ * /reviews/{ProductId}:
  *   get:
- *     summary: Get all reviews
- *     responses:
- *       200:
- *         description: List of all reviews
- *       500:
- *         description: Server error
- */
-router.get("/", async (req, res) => {
-  try {
-    const reviews = await knex("Review").select("*");
-    res.json(reviews);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-/**
- * @openapi
- * /reviews:
- *   get:
- *     summary: Get all reviews
+ *     summary: Get reviews for a specific product
  *     tags:
  *       - Reviews
+ *     parameters:
+ *       - in: path
+ *         name: ProductId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the product to fetch reviews for
  *     responses:
  *       200:
- *         description: List of all reviews
+ *         description: List of reviews for the given product
  *         content:
  *           application/json:
  *             schema:
@@ -98,27 +89,76 @@ router.get("/", async (req, res) => {
  *                 properties:
  *                   id:
  *                     type: integer
+ *                   ProductId:
+ *                     type: integer
  *                   rating:
  *                     type: integer
- *                     description: Rating given (1-5)
  *                   comment:
  *                     type: string
- *                   created_at:
- *                     type: string
- *                     format: date-time
  *       500:
  *         description: Server error
  */
-router.get("/:id", async (req, res) => {
+router.get("/:ProductId", async (req, res) => {
   try {
-    const review = await knex("Review").where({ id: req.params.id }).first();
+    const { ProductId } = req.params;
 
-    if (!review) return res.status(404).json({ error: "Review not found" });
-    res.json(review);
+    const items = await knex("Review")
+      .join("Products", "Review.ProductId", "Products.id")
+      .select(
+        "Review.id",
+        "Review.ProductId",
+        "Review.rating",
+        "Review.comment",
+        "Products.name"
+      )
+      .where("Review.ProductId", ProductId);
+
+    res.json(items);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+// /**
+//  * @openapi
+//  * /reviews:
+//  *   get:
+//  *     summary: Get all reviews
+//  *     tags:
+//  *       - Reviews
+//  *     responses:
+//  *       200:
+//  *         description: List of all reviews
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: array
+//  *               items:
+//  *                 type: object
+//  *                 properties:
+//  *                   id:
+//  *                     type: integer
+//  *                   rating:
+//  *                     type: integer
+//  *                     description: Rating given (1-5)
+//  *                   comment:
+//  *                     type: string
+//  *                   created_at:
+//  *                     type: string
+//  *                     format: date-time
+//  *       500:
+//  *         description: Server error
+//  */
+// router.get("/:id", async (req, res) => {
+//   try {
+//     const review = await knex("Review").where({ id: req.params.id }).first();
+
+//     if (!review) return res.status(404).json({ error: "Review not found" });
+//     res.json(review);
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
 
 /**
  * @openapi
@@ -143,6 +183,7 @@ router.get("/:id", async (req, res) => {
  *             required:
  *               - rating
  *               - comment
+ *               - ProductId
  *             properties:
  *               rating:
  *                 type: integer
@@ -150,6 +191,9 @@ router.get("/:id", async (req, res) => {
  *               comment:
  *                 type: string
  *                 description: Updated comment
+ *               ProductId:
+ *                 type: integer
+ *                 description: Id of product you adding reviw of
  *     responses:
  *       200:
  *         description: Review updated successfully
@@ -164,6 +208,8 @@ router.get("/:id", async (req, res) => {
  *                   type: integer
  *                 comment:
  *                   type: string
+ *                 ProductId:
+ *                   type: integer
  *                 updated_at:
  *                   type: string
  *                   format: date-time
@@ -172,7 +218,7 @@ router.get("/:id", async (req, res) => {
  */
 router.put("/:id", upload.none(), async (req, res) => {
   try {
-    const { rating, comment } = req.body;
+    const { rating, comment, ProductId } = req.body;
 
     const updated = await knex("Review")
       .where({ id: req.params.id })

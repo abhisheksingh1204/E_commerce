@@ -67,86 +67,23 @@ router.post("/image", upload.single("image"), async (req, res) => {
   res.status(201).json(product);
 });
 
-// /**
-//  * @openapi
-//  * /products:
-//  *   post:
-//  *     summary: Add a new product (without image upload)
-//  *     tags:
-//  *       - Products
-//  *     requestBody:
-//  *       required: true
-//  *       content:
-//  *         multipart/form-data:
-//  *           schema:
-//  *             type: object
-//  *             required:
-//  *               - name
-//  *               - price
-//  *               - stock_quantity
-//  *             properties:
-//  *               name:
-//  *                 type: string
-//  *                 description: Name of the product
-//  *               price:
-//  *                 type: number
-//  *                 description: Price of the product
-//  *               stock_quantity:
-//  *                 type: integer
-//  *                 description: Quantity available in stock
-//  *               image_url:
-//  *                 type: string
-//  *                 description: Optional image URL or file name
-//  *     responses:
-//  *       200:
-//  *         description: Product added
-//  *         content:
-//  *           application/json:
-//  *             schema:
-//  *               type: object
-//  *               properties:
-//  *                 id:
-//  *                   type: integer
-//  *                 name:
-//  *                   type: string
-//  *                 price:
-//  *                   type: number
-//  *                 stock_quantity:
-//  *                   type: integer
-//  *                 image_url:
-//  *                   type: string
-//  *       500:
-//  *         description: Server error
-//  */
-// router.post("/", async (req, res) => {
-//   try {
-//     const { name, price, stock_quantity, image_url } = req.body;
-//     const newProduct = await knex("Products")
-//       .insert({ name, price, stock_quantity, image_url })
-//       .returning("*");
-//     res.json(newProduct);
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// });
-
 /**
  * @openapi
- * /products:
+ * /products/{name}:
  *   get:
- *     summary: Get all products
+ *     summary: Get product(s) by exact name
  *     tags:
  *       - Products
  *     parameters:
- *       - in: query
- *         name: search
+ *       - in: path
+ *         name: name
+ *         required: true
  *         schema:
  *           type: string
- *         required: false
- *         description: Search term for product name (case-insensitive)
+ *         description: Name of the product to retrieve
  *     responses:
  *       200:
- *         description: List of products
+ *         description: Product(s) matching the given name
  *         content:
  *           application/json:
  *             schema:
@@ -166,11 +103,18 @@ router.post("/image", upload.single("image"), async (req, res) => {
  *                     type: string
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
-router.get("/", async (req, res) => {
+router.get("/:name", async (req, res) => {
   try {
-    const search = req.query.search || "";
-    const products = await knex("Products").whereILike("name", `%${search}%`);
+    const { name } = req.params;
+    const products = await knex("Products").where({ name });
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -259,10 +203,7 @@ router.put("/:id", upload.none(), async (req, res) => {
  */
 router.delete("/:id", async (req, res) => {
   try {
-    const deleted = await knex("Products")
-      .where({ id: req.params.id })
-      .where({ id: req.params.id })
-      .del();
+    const deleted = await knex("Products").where({ id: req.params.id }).del();
     if (deleted) {
       res.status(200).json({ message: "Product deleted successfully" });
     } else {
