@@ -6,7 +6,7 @@ const upload = multer();
 
 /**
  * @openapi
- * /cart/Add to cart:
+ * /cart/Add_to_cart:
  *   post:
  *     summary: Add item to cart
  *     tags:
@@ -30,6 +30,8 @@ const upload = multer();
  *                 description: ID of the product to add
  *               quantity:
  *                 type: integer
+ *               Product_name:
+ *                 type: string
  *                 description: Quantity of the product
  *     responses:
  *       200:
@@ -61,9 +63,9 @@ const upload = multer();
  *                 error:
  *                   type: string
  */
-router.post("/Add to cart", upload.none(), async (req, res) => {
+router.post("/Add_to_cart", upload.none(), async (req, res) => {
   try {
-    const { user_id, product_id, quantity } = req.body;
+    const { user_id, product_id, quantity, Product_name } = req.body;
     const qty = Number(quantity);
 
     if (!user_id || !product_id || !qty)
@@ -85,7 +87,12 @@ router.post("/Add to cart", upload.none(), async (req, res) => {
         .where({ user_id, product_id })
         .update({ quantity: updatedQty });
     } else {
-      await knex("Cart").insert({ user_id, product_id, quantity: qty });
+      await knex("Cart").insert({
+        user_id,
+        product_id,
+        quantity,
+        Product_name: qty,
+      });
     }
 
     await knex("Products")
@@ -160,7 +167,7 @@ router.get("/:user_id", async (req, res) => {
  * @openapi
  * /cart/{user_id}/{product_id}:
  *   put:
- *     summary: Update quantity of a cart item
+ *     summary: Update quantity of a cart item and adjust stock
  *     tags:
  *       - Cart
  *     parameters:
@@ -187,19 +194,19 @@ router.get("/:user_id", async (req, res) => {
  *             properties:
  *               quantity:
  *                 type: integer
- *                 description: Updated quantity
+ *                 description: Updated quantity of the product in cart
  *     responses:
  *       200:
- *         description: Cart item updated
+ *         description: Cart item updated and stock adjusted
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 error:
+ *                 message:
  *                   type: string
  *       400:
- *         description: Missing quantity value
+ *         description: Missing or invalid quantity
  *         content:
  *           application/json:
  *             schema:
@@ -222,9 +229,41 @@ router.put("/:user_id/:product_id", upload.none(), async (req, res) => {
     const { user_id, product_id } = req.params;
     const { quantity } = req.body;
 
-    await knex("Cart").where({ user_id, product_id }).update({ quantity });
+    const newQty = Number(quantity);
+    if (!newQty || newQty < 1) {
+      return res
+        .status(400)
+        .json({ error: "Quantity must be a positive number" });
+    }
 
-    res.json({ message: "Cart item updated" });
+    // Get the existing cart item
+    const cartItem = await knex("Cart").where({ user_id, product_id }).first();
+    if (!cartItem)
+      return res.status(404).json({ error: "Cart item not found" });
+
+    const difference = newQty - cartItem.quantity;
+
+    // Check stock before updating
+    const product = await knex("Products").where({ id: product_id }).first();
+    if (!product) return res.status(404).json({ error: "Product not found" });
+
+    if (product.stock_quantity < difference) {
+      return res
+        .status(400)
+        .json({ error: "Not enough stock to increase quantity" });
+    }
+
+    // Update cart quantity
+    await knex("Cart")
+      .where({ user_id, product_id })
+      .update({ quantity: newQty });
+
+    // Adjust stock in Products table
+    await knex("Products")
+      .where({ id: product_id })
+      .decrement("stock_quantity", difference); // if difference = -2 → stock +2
+
+    res.json({ message: "Cart item updated and stock adjusted" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

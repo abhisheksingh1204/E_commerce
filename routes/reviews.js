@@ -21,6 +21,7 @@ const upload = multer();
  *               - rating
  *               - comment
  *               - ProductId
+ *               - user_id
  *             properties:
  *               rating:
  *                 type: integer
@@ -30,7 +31,10 @@ const upload = multer();
  *                 description: Review comment
  *               ProductId:
  *                 type: integer
- *                 description: Id of product you want to write review of
+ *                 description: ID of the product being reviewed
+ *               user_id:
+ *                 type: integer
+ *                 description: ID of the user submitting the review
  *     responses:
  *       200:
  *         description: Review added successfully
@@ -45,18 +49,36 @@ const upload = multer();
  *                   type: integer
  *                 comment:
  *                   type: string
+ *                 ProductId:
+ *                   type: integer
+ *                 user_id:
+ *                   type: integer
  *                 created_at:
  *                   type: string
  *                   format: date-time
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.post("/", upload.none(), async (req, res) => {
   try {
-    const { rating, comment, ProductId } = req.body;
-    const newReview = await knex("Review")
-      .insert({ rating, comment, ProductId })
+    const { rating, comment, ProductId, user_id } = req.body;
+
+    const [newReview] = await knex("Review")
+      .insert({
+        rating: Number(rating),
+        comment,
+        ProductId: Number(ProductId),
+        user_id: Number(user_id),
+      })
       .returning("*");
+
     res.json(newReview);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -95,6 +117,8 @@ router.post("/", upload.none(), async (req, res) => {
  *                     type: integer
  *                   comment:
  *                     type: string
+ *                   user_id:
+ *                     type: integer
  *       500:
  *         description: Server error
  */
@@ -104,12 +128,15 @@ router.get("/:ProductId", async (req, res) => {
 
     const items = await knex("Review")
       .join("Products", "Review.ProductId", "Products.id")
+      .join("users", "Review.user_id", "users.id")
       .select(
         "Review.id",
         "Review.ProductId",
         "Review.rating",
         "Review.comment",
-        "Products.name"
+        "Products.name as product_name",
+        "users.id as user_id",
+        "users.name as user_name"
       )
       .where("Review.ProductId", ProductId);
 
@@ -184,6 +211,7 @@ router.get("/:ProductId", async (req, res) => {
  *               - rating
  *               - comment
  *               - ProductId
+ *               - user_id
  *             properties:
  *               rating:
  *                 type: integer
@@ -193,7 +221,10 @@ router.get("/:ProductId", async (req, res) => {
  *                 description: Updated comment
  *               ProductId:
  *                 type: integer
- *                 description: Id of product you adding reviw of
+ *                 description: ID of the product being reviewed
+ *               user_id:
+ *                 type: integer
+ *                 description: ID of the user updating the review
  *     responses:
  *       200:
  *         description: Review updated successfully
@@ -210,15 +241,25 @@ router.get("/:ProductId", async (req, res) => {
  *                   type: string
  *                 ProductId:
  *                   type: integer
+ *                 user_id:
+ *                   type: integer
  *                 updated_at:
  *                   type: string
  *                   format: date-time
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
+
 router.put("/:id", upload.none(), async (req, res) => {
   try {
-    const { rating, comment, ProductId } = req.body;
+    const { rating, comment, ProductId, user_id } = req.body;
 
     const updated = await knex("Review")
       .where({ id: req.params.id })
@@ -246,8 +287,10 @@ router.put("/:id", upload.none(), async (req, res) => {
  *         schema:
  *           type: integer
  *     responses:
- *       204:
- *         description: Review deleted successfully (No Content)
+ *       200:
+ *         description: Review deleted successfully
+ *       404:
+ *         description: Review not found
  *         content:
  *           application/json:
  *             schema:
@@ -255,15 +298,25 @@ router.put("/:id", upload.none(), async (req, res) => {
  *               properties:
  *                 error:
  *                   type: string
- *       404:
- *         description: Review not found
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 router.delete("/:id", async (req, res) => {
   try {
-    await knex("Review").where({ id: req.params.id }).del();
-    res.sendStatus(204);
+    const deleted = await knex("Review").where({ id: req.params.id }).del();
+
+    if (deleted === 0) {
+      return res.status(404).json({ error: "Review not found" });
+    }
+
+    res.sendStatus(200);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

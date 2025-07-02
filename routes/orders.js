@@ -102,14 +102,21 @@ const transporter = nodemailer.createTransport({
 
 /**
  * @openapi
- * /orders:
+ * /orders/{user_id}:
  *   get:
- *     summary: Get all orders
+ *     summary: Get all orders for a user
  *     tags:
- *      - Orders
+ *       - Orders
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the user
  *     responses:
  *       200:
- *         description: List of all orders
+ *         description: List of orders for the user
  *         content:
  *           application/json:
  *             schema:
@@ -157,36 +164,50 @@ router.get("/:user_id", async (req, res) => {
 
 /**
  * @openapi
- * /orders:
+ * /orders/{id}:
  *   get:
- *     summary: Get all orders
+ *     summary: Get a specific order by ID
  *     tags:
  *       - Orders
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the order
  *     responses:
  *       200:
- *         description: List of all orders
+ *         description: Order details
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   Total_amount:
- *                     type: number
- *                   quantity:
- *                     type: integer
- *                   status:
- *                     type: string
- *                   payment_method:
- *                     type: string
- *                   user_id:
- *                     type: integer
- *                   created_at:
- *                     type: string
- *                     format: date-time
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 Total_amount:
+ *                   type: number
+ *                 quantity:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *                 payment_method:
+ *                   type: string
+ *                 user_id:
+ *                   type: integer
+ *                 created_at:
+ *                   type: string
+ *                   format: date-time
+ *       404:
+ *         description: Order not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
  *         content:
@@ -317,7 +338,7 @@ router.put("/:id", upload.none(), async (req, res) => {
  *           type: integer
  *         description: ID of the order to delete
  *     responses:
- *       204:
+ *       200:
  *         description: Order deleted successfully (No Content)
  *         content:
  *           application/json:
@@ -339,7 +360,7 @@ router.put("/:id", upload.none(), async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     await knex("Orders").where({ id: req.params.id }).del();
-    res.sendStatus(204); // No
+    res.sendStatus(200);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -360,17 +381,32 @@ router.delete("/:id", async (req, res) => {
  *             type: object
  *             required:
  *               - user_id
+ *               - cart_id
+ *               - Total_amount
  *               - payment_method
+ *               - quantity
  *             properties:
  *               user_id:
  *                 type: integer
  *                 description: ID of the user placing the order
+ *               cart_id:
+ *                 type: integer
+ *                 description: ID of the cart associated with the order
+ *               Total_amount:
+ *                 type: number
+ *                 description: Total order amount
+ *               quantity:
+ *                 type: integer
+ *                 description: Total quantity of items in the order
+ *               status:
+ *                 type: string
+ *                 description: Order status (e.g., "pending")
  *               payment_method:
  *                 type: string
  *                 description: Method of payment (e.g., "card", "cod", etc.)
  *     responses:
  *       200:
- *         description: Order placed and cart cleared successfully
+ *         description: Order placed and email sent successfully
  *         content:
  *           application/json:
  *             schema:
@@ -384,8 +420,23 @@ router.delete("/:id", async (req, res) => {
  *                   type: object
  *                 emailId:
  *                   type: string
- *       400:
- *         description: Cart is empty
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       cart_id:
+ *                         type: integer
+ *                       payment_method:
+ *                         type: string
+ *                       Total_amount:
+ *                         type: number
+ *                       quantity:
+ *                         type: integer
+ *       404:
+ *         description: User not found or email missing
  *         content:
  *           application/json:
  *             schema:
@@ -394,7 +445,7 @@ router.delete("/:id", async (req, res) => {
  *                 error:
  *                   type: string
  *       500:
- *         description: Order or email error
+ *         description: Error in order or payment
  *         content:
  *           application/json:
  *             schema:
@@ -408,6 +459,7 @@ router.post("/place", upload.none(), async (req, res) => {
     const { user_id, cart_id, Total_amount, payment_method, quantity, status } =
       req.body;
 
+    console.log("Request Body:", req.body);
     const [order] = await knex("Orders")
       .insert({
         Total_amount,
@@ -418,6 +470,7 @@ router.post("/place", upload.none(), async (req, res) => {
         cart_id,
       })
       .returning("*");
+    console.log("Order inserted:", order);
 
     const items = await knex("Orders")
       .join("Cart", "Orders.cart_id", "Cart.id")
@@ -426,11 +479,12 @@ router.post("/place", upload.none(), async (req, res) => {
         "Orders.cart_id",
         "Orders.payment_method",
         "Orders.Total_amount",
+        "Cart.Product_name",
         "Cart.quantity"
       )
       .where("Orders.cart_id", cart_id);
 
-    await knex("Cart").where("id", cart_id).del();
+    // await knex("Cart").where("id", cart_id).del();
 
     const user = await knex("users").where({ id: user_id }).first();
 
