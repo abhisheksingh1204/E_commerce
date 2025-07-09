@@ -4,7 +4,7 @@
  */
 exports.up = function (knex) {
   return knex.schema.table("Orders", function (table) {
-    table.integer("user_id").unsigned(); // or .notNullable() agar zaroori ho
+    table.integer("user_id").unsigned();
   });
 };
 

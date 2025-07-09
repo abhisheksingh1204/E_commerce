@@ -14,11 +14,25 @@ const options = {
       title: "Ecommerce app",
       version: "1.0.0",
       description:
-        "This is API documentation of my Ecommerce app, all the APIs used in my Project has documented here, you can see my project on 'https://github.com/abhisheksingh1204/E_commerce' ",
+        "This is API documentation of my Ecommerce app, all the APIs used in my Project has documented here.",
     },
     servers: [
       {
-        url: "http://localhost:3001", // local server
+        url: "http://localhost:3001",
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT", // optional, just for UI clarity
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
       },
     ],
   },
